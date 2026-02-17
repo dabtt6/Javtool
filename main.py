@@ -23,6 +23,8 @@ QBIT_PASS = "111111"
 
 # Xoá file .torrent local sau khi đã đẩy sang qBit
 DELETE_LOCAL_TORRENT_AFTER_PUSH = True
+# Xoá record torrent trong DB sau khi add thành công vào qBit
+DELETE_DB_RECORD_AFTER_PUSH = True
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -313,10 +315,13 @@ def download_all():
                         timeout=15,
                     )
 
-            cursor.execute(
-                "UPDATE downloads SET status='downloaded' WHERE id=?",
-                (file_id,),
-            )
+            if DELETE_DB_RECORD_AFTER_PUSH:
+                cursor.execute("DELETE FROM downloads WHERE id=?", (file_id,))
+            else:
+                cursor.execute(
+                    "UPDATE downloads SET status='downloaded' WHERE id=?",
+                    (file_id,),
+                )
             conn.commit()
 
         except Exception as e:
